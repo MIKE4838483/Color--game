@@ -1,1 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Infinite Color Puzzle</title>
 
+<style>
+
+body{
+    margin:0;
+    background:#151515;
+    font-family:Arial;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.game{
+    text-align:center;
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+.info{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin-bottom:20px;
+    font-size:20px;
+}
+
+.board{
+    display:grid;
+    gap:8px;
+    background:#4b2f1d;
+    padding:20px;
+    border-radius:20px;
+    margin-bottom:20px;
+}
+
+.cell{
+    width:70px;
+    height:70px;
+    border-radius:12px;
+    border:3px solid #222;
+    transition:0.2s;
+}
+
+.controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:10px;
+}
+
+button{
+    padding:10px 16px;
+    border:none;
+    border-radius:10px;
+    background:#333;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#555;
+}
+
+.win{
+    color:lime;
+    font-size:24px;
+    font-weight:bold;
+    margin-top:10px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="game">
+
+    <h1>Infinite Color Puzzle</h1>
+
+    <div class="info">
+        <div>Level: <span id="level">1</span></div>
+        <div>Moves: <span id="moves">0</span></div>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="controls" id="rowControls"></div>
+    <div class="controls" id="colControls"></div>
+
+    <div class="win" id="winText"></div>
+
+</div>
+
+<script>
+
+const COLORS = [
+    "red",
+    "blue",
+    "yellow",
+    "green",
+    "purple",
+    "orange",
+    "cyan",
+    "pink"
+];
+
+let level = 1;
+let size = 3;
+let moves = 0;
+
+let grid = [];
+let solution = [];
+
+function generateLevel() {
+
+    size = Math.min(3 + Math.floor(level / 3), 6);
+
+    grid = [];
+    solution = [];
+
+    let chosenColors = COLORS.slice(0, size);
+
+    for(let r = 0; r < size; r++){
+
+        let row = [];
+
+        for(let c = 0; c < size; c++){
+            row.push(chosenColors[r]);
+        }
+
+        solution.push([...row]);
+        grid.push([...row]);
+    }
+
+    shuffleBoard();
+
+    moves = 0;
+
+    document.getElementById("level").textContent = level;
+    document.getElementById("moves").textContent = moves;
+
+    createControls();
+    drawBoard();
+}
+
+function shuffleBoard(){
+
+    for(let i = 0; i < size * 10; i++){
+
+        if(Math.random() < 0.5){
+
+            let row = Math.floor(Math.random() * size);
+            shiftRow(row, false);
+
+        } else {
+
+            let col = Math.floor(Math.random() * size);
+            shiftCol(col, false);
+        }
+    }
+}
+
+function drawBoard(){
+
+    const board = document.getElementById("board");
+
+    board.style.gridTemplateColumns = `repeat(${size}, 70px)`;
+
+    board.innerHTML = "";
+
+    for(let r = 0; r < size; r++){
+
+        for(let c = 0; c < size; c++){
+
+            let cell = document.createElement("div");
+
+            cell.className = "cell";
+            cell.style.background = grid[r][c];
+
+            board.appendChild(cell);
+        }
+    }
+
+    checkWin();
+}
+
+function createControls(){
+
+    const rowControls = document.getElementById("rowControls");
+    const colControls = document.getElementById("colControls");
+
+    rowControls.innerHTML = "";
+    colControls.innerHTML = "";
+
+    for(let i = 0; i < size; i++){
+
+        let rowBtn = document.createElement("button");
+        rowBtn.textContent = `Row ${i+1} ➜`;
+        rowBtn.onclick = () => shiftRow(i, true);
+
+        rowControls.appendChild(rowBtn);
+
+        let colBtn = document.createElement("button");
+        colBtn.textContent = `Col ${i+1} ⬇`;
+        colBtn.onclick = () => shiftCol(i, true);
+
+        colControls.appendChild(colBtn);
+    }
+}
+
+function shiftRow(row, countMove){
+
+    let last = grid[row].pop();
+    grid[row].unshift(last);
+
+    if(countMove){
+        moves++;
+        document.getElementById("moves").textContent = moves;
+    }
+
+    drawBoard();
+}
+
+function shiftCol(col, countMove){
+
+    let last = grid[size - 1][col];
+
+    for(let i = size - 1; i > 0; i--){
+        grid[i][col] = grid[i - 1][col];
+    }
+
+    grid[0][col] = last;
+
+    if(countMove){
+        moves++;
+        document.getElementById("moves").textContent = moves;
+    }
+
+    drawBoard();
+}
+
+function checkWin(){
+
+    let won = JSON.stringify(grid) === JSON.stringify(solution);
+
+    if(won){
+
+        document.getElementById("winText").textContent =
+            `LEVEL ${level} COMPLETE!`;
+
+        setTimeout(() => {
+
+            level++;
+
+            document.getElementById("winText").textContent = "";
+
+            generateLevel();
+
+        }, 1500);
+    }
+}
+
+generateLevel();
+
+</script>
+
+</body>
+</html>
